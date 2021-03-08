@@ -16,10 +16,10 @@
 |  강화학습에 대한 배경지식 확보  |   O   |       |       |       |     Link1    |
 |  Nasdaq 개별 종목의 데이터 확보 |   O   |       |       |       |     Link2    |
 |      데이터 셋 가공 및 구축     |   O   |       |       |       |     Link2    |
-|   Rule 기반의 트레이딩 봇 개발  |       |   O   |       |       |     Link2    |
+|   Rule 기반의 트레이딩 봇 개발  |       |   O   |    O    |       |     Link2    |
 | 강화학습 기반의 트레이딩 봇 개발 |       |       |   O   |       |     Link2    |
-| Back-Testing을 통한 봇 성능 평가|   O   |       |       |       |     Link2    |
-|    봇 성능 개선 및 실제 운용    |   O   |       |       |       |     Link2    |
+| Back-Testing을 통한 봇 성능 평가|      |       |    O   |      O  |     Link2    |
+|    봇 성능 개선 및 실제 운용    |     |       |       |    O    |     Link2    |
 
 ## Results
 * Main code, table, graph, comparison, ...
