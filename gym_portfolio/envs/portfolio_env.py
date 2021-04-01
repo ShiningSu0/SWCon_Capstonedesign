@@ -8,7 +8,15 @@ import pandas as pd
 def flip(edge, np_random): #이게 이제 주사위가 아니고 투자결과를 return해야 함
     return 1 if np_random.uniform() < edge else -1
 
-
+#환경 구성
+"""
+현재 포트폴리오 비중
+현재 자산 가치
+30일 치 T10Y2Y의 요약된 결과
+Fear & Greed Index
+Gold, SPY, QQQ, US T30Y의 RSI
+Gold, SPY, QQQ, US T30Y의 STDDEV
+"""
 class PortfolioEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
