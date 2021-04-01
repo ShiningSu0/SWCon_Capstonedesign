@@ -4,7 +4,7 @@ from gym.envs.registration import register
 logger = logging.getLogger(__name__)
 
 register(
-    id='Soccer-v0',
+    id='Portfolio-v0',
     entry_point='gym_portfolio.envs:PortfolioEnv',
     timestep_limit=1000,
     reward_threshold=1.0,
