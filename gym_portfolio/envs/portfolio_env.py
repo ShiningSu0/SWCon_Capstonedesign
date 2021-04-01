@@ -9,7 +9,7 @@ def flip(edge, np_random): #이게 이제 주사위가 아니고 투자결과를
     return 1 if np_random.uniform() < edge else -1
 
 #환경 구성
-"""
+""" time window=300으로 연속적으로 보여줌..?
 현재 포트폴리오 비중
 현재 자산 가치
 30일 치 T10Y2Y의 요약된 결과
@@ -23,7 +23,7 @@ class PortfolioEnv(gym.Env):
     def __init__(self,  edge=0.6, max_wealth=200000, max_rounds=300):
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
-      # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y)
+      # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y yield)
       #할 수 있는 경우의 수가 Box( ) 안에 들어감!
       # increments
       self.observation_space = spaces.Tuple((
@@ -49,13 +49,13 @@ class PortfolioEnv(gym.Env):
       self.np_random, seed = seeding.np_random(seed)
       return [seed]
 
-    def step(self, action):
+    def step(self, action):#step 함수를 이용해 에이전트가 환경에 대한 행동 취하고, 이후 획득한 환경에 대한 정보 리턴
       #bet_in_dollars는 포트폴리오의 비중 조정 결정으로 수정되어야.
       bet_in_dollars = min(action / 100.0, self.wealth)  # action = desired bet in pennies
       self.rounds -= 1
 
       coinflip = flip(self.edge, self.np_random)
-      #coinflip은
+      #coinflip은 필요없나..?
 
       self.wealth = min(self.max_wealth, self.wealth + coinflip * bet_in_dollars)
       # wealth는 포트폴리오의 최대 결과로 수정되어야.
