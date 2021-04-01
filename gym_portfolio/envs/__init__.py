@@ -1,0 +1,3 @@
+from gym_portfolio.envs.portfolio_env import PortfolioEnv
+from gym_portfolio.envs.soccer_empty_goal import SoccerEmptyGoalEnv
+from gym_portfolio.envs.soccer_against_keeper import SoccerAgainstKeeperEnv
