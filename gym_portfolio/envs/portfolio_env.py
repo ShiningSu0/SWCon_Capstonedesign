@@ -31,6 +31,7 @@ class PortfolioEnv(gym.Env):
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
           spaces.Box(n일 치 T10Y2Y),spaces.Box(n일 치 거시경제지표))) # 지표들
           #지표 어떤 거 넣지? T10Y2Y 요약된 결과, 투자시점의 RSI(추세), 변동성(표준편차)
+      #data : fred, yahoo finance
           # box는 실수형, discrete는 이산형 범위
           #spaces.Discrete(max_rounds + 1),
 
