@@ -24,7 +24,7 @@ class PortfolioEnv(gym.Env):
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
       # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y yield)
-      #할 수 있는 경우의 수가 Box( ) 안에 들어감!
+      #할 수 있는 경우의 수가 Box( ) 안에 들어감! datas
       # increments
       self.observation_space = spaces.Tuple((
           spaces.Box(np.array([0,0,0,0,0]),np.array([1,1,1,1,1])), #현재 포트폴리오 비중
