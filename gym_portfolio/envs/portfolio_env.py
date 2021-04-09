@@ -21,24 +21,28 @@ Gold, SPY, QQQ, US T30Y의 STDDEV
 class PortfolioEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
-    def __init__(self,  edge=0.6, max_wealth=200000, days=250):
+    def __init__(self,  max_wealth=200000, days=400):
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
       # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y yield)
       #할 수 있는 경우의 수가 Box( ) 안에 들어감! datas
       # increments
+      #https: // assethorizon.tistory.com / 18
+      #https://medium.com/swlh/states-observation-and-action-spaces-in-reinforcement-learning-569a30a8d2a1
       self.observation_space = spaces.Tuple((
           spaces.Box(np.array([0,0,0,0]),np.array([1,1,1,1])), #현재 포트폴리오 비중
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
+          spaces.Box(shape=(100,4),dtype=np.float32),#n일 치 투자자산들 low=0, high=0,
           spaces.Box(n일 치 T10Y2Y))) # 지표들
           #지표 어떤 거 넣지? T10Y2Y 요약된 결과, 투자시점의 RSI(추세), 변동성(표준편차)
       #data : fred, yahoo finance
+          #반년 치 보여주고, 투자하고, 반년 치 보여주고, 또 투자하고.. 총 3년
           # box는 실수형, discrete는 이산형 범위
           #spaces.Discrete(days + 1),
       self.data=pd.read_csv('data.csv',index_col=0)
       self.idx = np.random.randint(low=0, high=len(self.data.index) - self.days)
       self.reward_range = (0, max_wealth)
-      self.edge = edge
+      self.step=0
       self.wealth = 100000
       self.initial_wealth = 100000 #Starts at $100,000
       self.portfolio_proportion=[0,0,0,1] #비중의 초기값 NASDAQ, DOWJONES,GOLD,DGS30(Arbitrage)
@@ -53,13 +57,15 @@ class PortfolioEnv(gym.Env):
       return [seed]
 
     def step(self, action):#step 함수를 이용해 에이전트가 환경에 대한 행동 취하고, 이후 획득한 환경에 대한 정보 리턴
-      observation=(self.portfolio_proportion,
-        self.data.iloc[self.idx].values,#[self.idx:self.idx+30]도 가능
+      observation=(
+        self.portfolio_proportion,
+        self.wealth,
+        self.data.iloc[self.idx:self.idx+100].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
 
                    )
-      self.idx += 1
+      self.idx += 100
       self.step += 1
-      done = self.step >= self.days
+      done = self.step >= 4
       #??yret = observation[2]
 
       reward, info = self.sim._step(action, yret)
@@ -88,6 +94,7 @@ class PortfolioEnv(gym.Env):
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.
       self.wealth = self.initial_wealth
+      self.step=0
       return self._get_obs()
 
     def render(self, mode='human'):
