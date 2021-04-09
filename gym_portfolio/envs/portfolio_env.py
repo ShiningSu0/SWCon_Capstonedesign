@@ -7,31 +7,30 @@ import pandas as pd
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
 
 #환경 구성
-def reward(action):
+def get_reward(action,start_value,end_value):
+  reward=0
+  return reward
 
 class PortfolioEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
-    def __init__(self,  max_wealth=200000, days=400): #max 200000 : 100000에서 2배까지 불어나면 종료
+    def __init__(self,  max_wealth=200000, days=240): #max 200000 : 100000에서 2배까지 불어나면 종료
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
-      # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y yield)
-      #할 수 있는 경우의 수가 Box( ) 안에 들어감! datas
-      # increments
       #https: // assethorizon.tistory.com / 18
       #https://medium.com/swlh/states-observation-and-action-spaces-in-reinforcement-learning-569a30a8d2a1
       self.observation_space = spaces.Tuple((
           spaces.Box(np.array([0,0,0,0]),np.array([1,1,1,1])), #현재 포트폴리오 비중
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
-          spaces.Box(shape=(100,4),dtype=np.float32),#[NASDAQ,DOWJONES,GOLD,DGS30]
+          spaces.Box(shape=(60,4),dtype=np.float32),#[NASDAQ,DOWJONES,GOLD,DGS30]
           spaces.Box(shape=(1,3),dtype=np.float32)))#indicators[Spread(T10Y-2Y),RSI,Volatility(Var)]
       #data : fred, yahoo finance
-          #반년 치 보여주고, 투자하고, 반년 치 보여주고, 또 투자하고.. 총 3년
+          #3개월 치 보여주고, 투자하고, 3개월 치 보여주고, 또 투자하고.. 총 2년
           # box는 실수형, discrete는 이산형 범위
           #spaces.Discrete(days + 1),
       self.data=pd.read_csv('data.csv',index_col=0)
       self.indicators=pd.read_csv('indicators.csv',index_col=0)
-      self.idx = np.random.randint(low=0, high=len(self.data.index) - self.days)
+      self.idx = np.random.randint(low=0, high=len(self.data.index) - self.days-60)
       self.reward_range = (0, max_wealth)
       self.stepcount=0
       self.wealth = 100000
@@ -51,19 +50,16 @@ class PortfolioEnv(gym.Env):
       observation=(
         self.portfolio_proportion,
         self.wealth,
-        self.data.iloc[self.idx:self.idx+101].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
-        self.data.iloc[self.idx + 100].values # 마지막 시점에서 요약된 indicator들을 보여줌.
+        self.data.iloc[self.idx:self.idx+61].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
+        self.data.iloc[self.idx + 60].values # 마지막 시점에서 요약된 indicator들을 보여줌.
                    )
       self.idx += 100
       self.stepcount += 1
       done = self.stepcount >= 4
-      #??yret = observation[2]
 
-      reward, info = self.sim._step(action, yret)
-
-      # info = { 'pnl': daypnl, 'nav':self.nav, 'costs':costs }
-
-      return observation, reward, done, info
+      reward = get_reward(action,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
+      self.wealth += reward
+      return observation, reward, done
 
       """#bet_in_dollars는 포트폴리오의 비중 조정 결정으로 수정되어야.
       bet_in_dollars = min(action / 100.0, self.wealth)  # action = desired bet in pennies
