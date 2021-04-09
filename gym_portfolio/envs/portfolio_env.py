@@ -6,22 +6,13 @@ import pandas as pd
 #https://engineering-ladder.tistory.com/61 구조에 대한 한국어 설명
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
 
-def flip(edge, np_random): #이게 이제 주사위가 아니고 투자결과를 return해야 함
-    return 1 if np_random.uniform() < edge else -1
-
 #환경 구성
-""" time window=300으로 연속적으로 보여줌..?
-현재 포트폴리오 비중
-현재 자산 가치
-30일 치 T10Y2Y의 요약된 결과
-Fear & Greed Index
-Gold, SPY, QQQ, US T30Y의 RSI
-Gold, SPY, QQQ, US T30Y의 STDDEV
-"""
+def reward(action):
+
 class PortfolioEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
-    def __init__(self,  max_wealth=200000, days=400):
+    def __init__(self,  max_wealth=200000, days=400): #max 200000 : 100000에서 2배까지 불어나면 종료
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
       # gold, SPY(S&P500), QQQ(NASDAQ),Arbitrage(US T30Y yield)
@@ -32,17 +23,17 @@ class PortfolioEnv(gym.Env):
       self.observation_space = spaces.Tuple((
           spaces.Box(np.array([0,0,0,0]),np.array([1,1,1,1])), #현재 포트폴리오 비중
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
-          spaces.Box(shape=(100,4),dtype=np.float32),#n일 치 투자자산들 low=0, high=0,
-          spaces.Box(n일 치 T10Y2Y))) # 지표들
-          #지표 어떤 거 넣지? T10Y2Y 요약된 결과, 투자시점의 RSI(추세), 변동성(표준편차)
+          spaces.Box(shape=(100,4),dtype=np.float32),#[NASDAQ,DOWJONES,GOLD,DGS30]
+          spaces.Box(shape=(1,3),dtype=np.float32)))#indicators[Spread(T10Y-2Y),RSI,Volatility(Var)]
       #data : fred, yahoo finance
           #반년 치 보여주고, 투자하고, 반년 치 보여주고, 또 투자하고.. 총 3년
           # box는 실수형, discrete는 이산형 범위
           #spaces.Discrete(days + 1),
       self.data=pd.read_csv('data.csv',index_col=0)
+      self.indicators=pd.read_csv('indicators.csv',index_col=0)
       self.idx = np.random.randint(low=0, high=len(self.data.index) - self.days)
       self.reward_range = (0, max_wealth)
-      self.step=0
+      self.stepcount=0
       self.wealth = 100000
       self.initial_wealth = 100000 #Starts at $100,000
       self.portfolio_proportion=[0,0,0,1] #비중의 초기값 NASDAQ, DOWJONES,GOLD,DGS30(Arbitrage)
@@ -60,12 +51,12 @@ class PortfolioEnv(gym.Env):
       observation=(
         self.portfolio_proportion,
         self.wealth,
-        self.data.iloc[self.idx:self.idx+100].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
-
+        self.data.iloc[self.idx:self.idx+101].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
+        self.data.iloc[self.idx + 100].values # 마지막 시점에서 요약된 indicator들을 보여줌.
                    )
       self.idx += 100
-      self.step += 1
-      done = self.step >= 4
+      self.stepcount += 1
+      done = self.stepcount >= 4
       #??yret = observation[2]
 
       reward, info = self.sim._step(action, yret)
@@ -94,7 +85,7 @@ class PortfolioEnv(gym.Env):
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.
       self.wealth = self.initial_wealth
-      self.step=0
+      self.stepcount=0
       return self._get_obs()
 
     def render(self, mode='human'):
