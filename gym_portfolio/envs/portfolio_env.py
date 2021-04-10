@@ -23,7 +23,7 @@ class PortfolioEnv(gym.Env):
           spaces.Box(np.array([0,0,0,0]),np.array([1,1,1,1])), #현재 포트폴리오 비중
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
           spaces.Box(shape=(60,4),dtype=np.float32),#[NASDAQ,DOWJONES,GOLD,DGS30]
-          spaces.Box(shape=(1,3),dtype=np.float32)))#indicators[Spread(T10Y-2Y),NASDAQ_RSI,DOW_RSI,GOLD_RSI,DGS30_RSI,Volatility(Var)]
+          spaces.Box(shape=(1,6),dtype=np.float32)))#indicators[Spread(T10Y-2Y),NASDAQ_RSI,DOWJONES_RSI,GOLD_RSI,DGS30_RSI,Volatility(Var)]
       #data : fred, yahoo finance
           #3개월 치 보여주고, 투자하고, 3개월 치 보여주고, 또 투자하고.. 총 2년
           # box는 실수형, discrete는 이산형 범위
