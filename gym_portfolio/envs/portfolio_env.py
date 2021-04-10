@@ -23,7 +23,7 @@ class PortfolioEnv(gym.Env):
           spaces.Box(np.array([0,0,0,0]),np.array([1,1,1,1])), #현재 포트폴리오 비중
           spaces.Box(0, max_wealth, shape=[1], dtype=np.float32), # 현재 자산가치
           spaces.Box(shape=(60,4),dtype=np.float32),#[NASDAQ,DOWJONES,GOLD,DGS30]
-          spaces.Box(shape=(1,3),dtype=np.float32)))#indicators[Spread(T10Y-2Y),RSI,Volatility(Var)]
+          spaces.Box(shape=(1,3),dtype=np.float32)))#indicators[Spread(T10Y-2Y),NASDAQ_RSI,DOW_RSI,GOLD_RSI,DGS30_RSI,Volatility(Var)]
       #data : fred, yahoo finance
           #3개월 치 보여주고, 투자하고, 3개월 치 보여주고, 또 투자하고.. 총 2년
           # box는 실수형, discrete는 이산형 범위
@@ -51,9 +51,9 @@ class PortfolioEnv(gym.Env):
         self.portfolio_proportion,
         self.wealth,
         self.data.iloc[self.idx:self.idx+61].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
-        self.data.iloc[self.idx + 60].values # 마지막 시점에서 요약된 indicator들을 보여줌.
+        self.indicators.iloc[self.idx + 60].values # 마지막 시점에서 요약된 indicator들을 보여줌.
                    )
-      self.idx += 100
+      self.idx += 60
       self.stepcount += 1
       done = self.stepcount >= 4
 

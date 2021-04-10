@@ -21,6 +21,6 @@ for i_episode in range(20):
 import pandas as pd
 #https://engineering-ladder.tistory.com/61 구조에 대한 한국어 설명
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
-data=pd.read_csv('data.csv',index_col=0)
+data=pd.read_csv('indicators.csv',index_col=0)
 print(data.iloc[10:20].values)
 print(data)
