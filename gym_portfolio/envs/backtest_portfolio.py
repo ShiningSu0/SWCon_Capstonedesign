@@ -1,26 +1,19 @@
-"""import gym
-
-env = gym.make('CartPole-v0')
-for i_episode in range(20):
-    # 새로운 에피소드(initial environment)를 불러온다(reset)
-    observation = env.reset()
-    for t in range(100):
-        env.render()
-        # 행동(action)을 취하기 이전에 환경에 대해 얻은 관찰값(observation)
-        print('observation before action:')
-        print(observation)
-        action = env.action_space.sample()
-        observation, reward, done, info = env.step(action)
-        # 행동(action)을 취한 이후에 환경에 대해 얻은 관찰값(observation)
-        print('observation after action:')
-        print(observation)
-
-        if done:
-            print("Episode finished after {} timesteps".format(t+1))
-            break"""
+import gym
+import numpy as np
+from gym_portfolio.envs.portfolio_env import PortfolioEnv
 import pandas as pd
-#https://engineering-ladder.tistory.com/61 구조에 대한 한국어 설명
-#https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
-data=pd.read_csv('indicators.csv',index_col=0)
-print(data.iloc[10:20].values)
-print(data)
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib import interactive
+
+env = gym.make('Portfolio-v0')
+observation = env.reset()
+done = False
+navs = []
+while not done:
+    action = 1 # stay flat
+    observation, reward, done = env.step(action)
+    #navs.append(info['nav'])
+    if done:
+        print ('Annualized return: ')#,navs[len(navs)-1]-1)
+        #pd.DataFrame(navs).plot()

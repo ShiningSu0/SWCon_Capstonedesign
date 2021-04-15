@@ -6,23 +6,6 @@ logger = logging.getLogger(__name__)
 register(
     id='Portfolio-v0',
     entry_point='gym_portfolio.envs:PortfolioEnv',
-    timestep_limit=1000,
     reward_threshold=1.0,
-    nondeterministic = True,
-)
-
-register(
-    id='SoccerEmptyGoal-v0',
-    entry_point='gym_portfolio.envs:SoccerEmptyGoalEnv',
-    timestep_limit=1000,
-    reward_threshold=10.0,
-    nondeterministic = True,
-)
-
-register(
-    id='SoccerAgainstKeeper-v0',
-    entry_point='gym.envs:SoccerAgainstKeeperEnv',
-    timestep_limit=1000,
-    reward_threshold=8.0,
     nondeterministic = True,
 )
