@@ -7,8 +7,12 @@ import pandas as pd
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
 
 #환경 구성
-def get_reward(action,start_value,end_value):
+def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 반환
   reward=0
+  for i in range(3):
+    reward+=((action[i]*wealth*(end_value[i]-start_value[i]))/start_value[i])
+  #DGS30 채권수익률은 다르게 계산됨.
+  reward+=action[3]*(pow((1+(0.01*start_value[3])/52),12)-1)
   return reward
 
 class PortfolioEnv(gym.Env):
@@ -56,8 +60,9 @@ class PortfolioEnv(gym.Env):
       self.stepcount += 1
       done = self.stepcount >= 4
 
-      reward = get_reward(action,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
+      reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
       self.wealth += reward
+      print(self.wealth)
       return observation, reward, done
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.
