@@ -13,7 +13,7 @@ observation = env.reset()
 done = False
 navs = []
 while not done:
-    action = [1,0,0,0] # stay flat
+    action = [0,0,0,1] # stay flat
     observation, reward, done = env.step(action)
     #navs.append(info['nav'])
     if done:

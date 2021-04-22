@@ -12,7 +12,7 @@ def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 �
   for i in range(3):
     reward+=((action[i]*wealth*(end_value[i]-start_value[i]))/start_value[i])
   #DGS30 채권수익률은 다르게 계산됨.
-  reward+=action[3]*(pow((1+(0.01*start_value[3])/52),12)-1)
+  reward+=action[3]*wealth*((1+0.01*(start_value[3])/4)-1)
   return reward
 
 class PortfolioEnv(gym.Env):
@@ -61,9 +61,8 @@ class PortfolioEnv(gym.Env):
       done = self.stepcount >= 4
 
       reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
-      for i in range(4):
-          self.portfolio_proportion[i]+=action[i]
-
+      self.portfolio_proportion=action
+      print(self.portfolio_proportion)
       self.wealth += reward
       print(self.wealth)
       return observation, reward, done
