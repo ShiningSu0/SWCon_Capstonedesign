@@ -61,6 +61,9 @@ class PortfolioEnv(gym.Env):
       done = self.stepcount >= 4
 
       reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
+      for i in range(4):
+          self.portfolio_proportion[i]+=action[i]
+
       self.wealth += reward
       print(self.wealth)
       return observation, reward, done
