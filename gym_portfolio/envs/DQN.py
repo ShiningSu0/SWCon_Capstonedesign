@@ -14,15 +14,16 @@ from collections import namedtuple
 from itertools import count
 from PIL import Image
 
+from torch.autograd import Variable
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
-
 env = gym.make('Portfolio-v0').unwrapped
-observation = env.reset()
+#observation = env.reset()
+env.reset()
 done = False
 navs = []
 is_ipython = 'inline' in matplotlib.get_backend()
@@ -34,16 +35,6 @@ plt.ion()
 # GPU를 사용할 경우
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-""" 예시 : 한 에피소드만 돌려볼 때
-#Executing 1 Episode
-while not done:
-    action = [0,0,0,1] # stay flat
-    observation, reward, done = env.step(action)
-    #navs.append(info['nav'])
-    if done:
-        print('end')
-"""
 
 
 ##Cartpole 알고리즘 차용 https://tutorials.pytorch.kr/intermediate/reinforcement_q_learning.html
@@ -76,75 +67,51 @@ class DQN(nn.Module):
         super(DQN, self).__init__()
         self.n_action = n_action
 
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4, padding=0)  # (In Channel, Out Channel, ...)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0)
+        LSTM_MEMORY = 128
+        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=1, padding=1)  # (In Channel, Out Channel, ...)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
 
-        self.affine1 = nn.Linear(3136, 512)
+        self.lstm = nn.LSTM(16, LSTM_MEMORY, 1)  # (Input, Hidden, Num Layers)
+
+        self.affine1 = nn.Linear(LSTM_MEMORY * 64, 512)
+        # self.affine2 = nn.Linear(2048, 512)
         self.affine2 = nn.Linear(512, self.n_action)
 
-    def forward(self, x):
-        h = F.relu(self.conv1(x))
-        h = F.relu(self.conv2(h))
-        h = F.relu(self.conv3(h))
+    def forward(self, x, hidden_state, cell_state):
+        # CNN
+        h = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2, stride=2))
+        h = F.relu(F.max_pool2d(self.conv2(h), kernel_size=2, stride=2))
+        h = F.relu(F.max_pool2d(self.conv3(h), kernel_size=2, stride=2))
+        h = F.relu(F.max_pool2d(self.conv4(h), kernel_size=2, stride=2))
 
-        # print(h.size())
-        # print(h.view(h.size(0), -1).size())
+        # LSTM
+        h = h.view(h.size(0), h.size(1), 16)  # (32, 64, 4, 4) -> (32, 64, 16)
+        h, (next_hidden_state, next_cell_state) = self.lstm(h, (hidden_state, cell_state))
+        h = h.view(h.size(0), -1)  # (32, 64, 256) -> (32, 16348)
 
+        # Fully Connected Layers
         h = F.relu(self.affine1(h.view(h.size(0), -1)))
+        # h = F.relu(self.affine2(h.view(h.size(0), -1)))
         h = self.affine2(h)
-        return h
+        return h, next_hidden_state, next_cell_state
 
-"""
-resize = T.Compose([T.ToPILImage(),
-                    T.Resize(40, interpolation=Image.CUBIC),
-                    T.ToTensor()])
+    def init_states(self) -> [Variable, Variable]:
+        LSTM_MEMORY = 128
+        hidden_state = Variable(torch.zeros(1, 64, LSTM_MEMORY).cuda())
+        cell_state = Variable(torch.zeros(1, 64, LSTM_MEMORY).cuda())
+        return hidden_state, cell_state
 
-def get_cart_location(screen_width):
-    world_width = env.x_threshold * 2
-    scale = screen_width / world_width
-    return int(env.state[0] * scale + screen_width / 2.0)  # MIDDLE OF CART
-
-def get_screen():
-    # gym이 요청한 화면은 400x600x3 이지만, 가끔 800x1200x3 처럼 큰 경우가 있습니다.
-    # 이것을 Torch order (CHW)로 변환한다.
-    screen = env.render(mode='rgb_array').transpose((2, 0, 1))
-    # 카트는 아래쪽에 있으므로 화면의 상단과 하단을 제거하십시오.
-    _, screen_height, screen_width = screen.shape
-    screen = screen[:, int(screen_height * 0.4):int(screen_height * 0.8)]
-    view_width = int(screen_width * 0.6)
-    cart_location = get_cart_location(screen_width)
-    if cart_location < view_width // 2:
-        slice_range = slice(view_width)
-    elif cart_location > (screen_width - view_width // 2):
-        slice_range = slice(-view_width, None)
-    else:
-        slice_range = slice(cart_location - view_width // 2,
-                            cart_location + view_width // 2)
-    # 카트를 중심으로 정사각형 이미지가 되도록 가장자리를 제거하십시오.
-    screen = screen[:, :, slice_range]
-    # float 으로 변환하고,  rescale 하고, torch tensor 로 변환하십시오.
-    # (이것은 복사를 필요로하지 않습니다)
-    screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
-    screen = torch.from_numpy(screen)
-    # 크기를 수정하고 배치 차원(BCHW)을 추가하십시오.
-    return resize(screen).unsqueeze(0).to(device)
-
-env.reset()
-plt.figure()
-plt.imshow(get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(),
-           interpolation='none')
-plt.title('Example extracted screen')
-plt.show()
-
-"""
-
-
+    def reset_states(self, hidden_state, cell_state):
+        hidden_state[:, :, :] = 0
+        cell_state[:, :, :] = 0
+        return hidden_state.detach(), cell_state.detach()
 
 #################################
 #학습 모듈
 #################################
-
+#다음주 할 일 : 중간보고서 발표, DQN 연결해보기
 
 BATCH_SIZE = 128
 GAMMA = 0.999
@@ -153,17 +120,12 @@ EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10
 
-# AI gym에서 반환된 형태를 기반으로 계층을 초기화 하도록 화면의 크기를
-# 가져옵니다. 이 시점에 일반적으로 3x40x90 에 가깝습니다.
-# 이 크기는 get_screen()에서 고정, 축소된 렌더 버퍼의 결과입니다.
-init_screen = get_screen()
-_, _, screen_height, screen_width = init_screen.shape
 
 # gym 행동 공간에서 행동의 숫자를 얻습니다.
-n_actions = env.action_space.n
+n_actions = env.action_space.shape[0] #이거 대신 action 수인 4를 넣어야 하나..?
 
-policy_net = DQN(screen_height, screen_width, n_actions).to(device)
-target_net = DQN(screen_height, screen_width, n_actions).to(device)
+policy_net = DQN(n_actions).to(device)
+target_net = DQN(n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
@@ -185,7 +147,18 @@ def select_action(state):
             # 기대 보상이 더 큰 행동을 선택할 수 있습니다.
             return policy_net(state).max(1)[1].view(1, 1)
     else:
-        return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
+        print('랜덤')
+        #random하고 비중의 합이 1이 되게끔 하는 input이 필요 -> 포트폴리오 비중.
+        r1=random.random()
+        r2=random.random()
+        r3=random.random()
+        r4=random.random()
+        r_sum=(r1+r2+r3+r4)
+        r1=r1/r_sum
+        r2 = r2 / r_sum
+        r3 = r3 / r_sum
+        r4 = r4 / r_sum
+        return torch.tensor([r1,r2,r3,r4], device=device, dtype=torch.float64)
 
 episode_durations = []
 
@@ -254,24 +227,37 @@ def optimize_model():
 
 #training
 
+""" 예시 : 한 에피소드만 돌려볼 때
+#Executing 1 Episode
+while not done:
+    action = [0,0,0,1] # stay flat
+    observation, reward, done = env.step(action)
+    #navs.append(info['nav'])
+    if done:
+        print('end')
+"""
+
 num_episodes = 50
 for i_episode in range(num_episodes):
     # 환경과 상태 초기화
     env.reset()
-    last_screen = get_screen()
-    current_screen = get_screen()
-    state = current_screen - last_screen
+    state=env.get_observation()
+    #last_screen = get_screen()
+    #current_screen = get_screen()
+    #state = current_screen - last_screen
+
     for t in count():
         # 행동 선택과 수행
         action = select_action(state)
-        _, reward, done, _ = env.step(action.item())
+        new_observation, reward, done = env.step(action)
+      #  _, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], device=device)
 
         # 새로운 상태 관찰
-        last_screen = current_screen
-        current_screen = get_screen()
+       # last_screen = current_screen
+       # current_screen = get_screen()
         if not done:
-            next_state = current_screen - last_screen
+            next_state = new_observation
         else:
             next_state = None
 

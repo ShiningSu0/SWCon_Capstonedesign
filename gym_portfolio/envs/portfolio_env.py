@@ -9,6 +9,7 @@ import pandas as pd
 #환경 구성
 def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 반환
   reward=0
+  print("action",action)
   for i in range(3):
     reward+=((action[i]*wealth*(end_value[i]-start_value[i]))/start_value[i])
   #DGS30 채권수익률은 다르게 계산됨.
@@ -18,7 +19,7 @@ def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 �
 class PortfolioEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self,  max_wealth=200000, days=240): #max 200000 : 100000에서 2배까지 불어나면 종료
+    def __init__(self,  max_wealth=2000000, days=240): #max 200000 : 100000에서 2배까지 불어나면 종료
       #Action 정의
       self.action_space = spaces.Box(np.array([-1,-1,-1,-1]),np.array([1,1,1,1]))
       #https: // assethorizon.tistory.com / 18
@@ -48,24 +49,24 @@ class PortfolioEnv(gym.Env):
     def seed(self, seed=None):
       self.np_random, seed = seeding.np_random(seed)
       return [seed]
-
+    def get_observation(self):
+        observation = (
+            self.portfolio_proportion,
+            self.wealth,
+            self.data.iloc[self.idx:self.idx + 61].values,  # [self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
+            self.indicators.iloc[self.idx + 60].values  # 마지막 시점에서 요약된 indicator들을 보여줌.
+        )
+        return observation
     def step(self, action):#step 함수를 이용해 에이전트가 환경에 대한 행동 취하고, 이후 획득한 환경에 대한 정보 리턴
-      observation=(
-        self.portfolio_proportion,
-        self.wealth,
-        self.data.iloc[self.idx:self.idx+61].values,#[self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
-        self.indicators.iloc[self.idx + 60].values # 마지막 시점에서 요약된 indicator들을 보여줌.
-                   )
       self.idx += 60
       self.stepcount += 1
       done = self.stepcount >= 4
-
       reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
       self.portfolio_proportion=action
       print(self.portfolio_proportion)
       self.wealth += reward
       print(self.wealth)
-      return observation, reward, done
+      return self.get_observation(), reward, done
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.
       self.wealth = self.initial_wealth
