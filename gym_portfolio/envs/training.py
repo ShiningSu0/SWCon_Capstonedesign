@@ -15,24 +15,28 @@ from itertools import count
 from PIL import Image
 import DQN
 
+
 num_episodes = 50
 for i_episode in range(num_episodes):
     # 환경과 상태 초기화
     env.reset()
-    last_screen = get_screen()
-    current_screen = get_screen()
-    state = current_screen - last_screen
+    state=env.get_observation()
+    #last_screen = get_screen()
+    #current_screen = get_screen()
+    #state = current_screen - last_screen
+
     for t in count():
         # 행동 선택과 수행
         action = select_action(state)
-        _, reward, done, _ = env.step(action.item())
+        new_observation, reward, done = env.step(action)
+      #  _, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], device=device)
 
         # 새로운 상태 관찰
-        last_screen = current_screen
-        current_screen = get_screen()
+       # last_screen = current_screen
+       # current_screen = get_screen()
         if not done:
-            next_state = current_screen - last_screen
+            next_state = new_observation
         else:
             next_state = None
 
