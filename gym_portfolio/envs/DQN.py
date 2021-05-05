@@ -66,6 +66,17 @@ class DQN(nn.Module):
     def __init__(self, n_action):
         super(DQN, self).__init__()
         self.n_action = n_action
+        self.linear_1=nn.Linear(self.n_action,4)
+        self.linear_2=nn.Linear(4,4)
+    def forward(self, input_tensor):
+        linear1=F.relu(self.linear_1(input_tensor))
+        output=F.sigmoid(self.linear_2(linear1))
+        return output
+"""
+class DQN(nn.Module):
+    def __init__(self, n_action):
+        super(DQN, self).__init__()
+        self.n_action = n_action
 
         LSTM_MEMORY = 128
         self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=1, padding=1)  # (In Channel, Out Channel, ...)
@@ -107,7 +118,7 @@ class DQN(nn.Module):
         hidden_state[:, :, :] = 0
         cell_state[:, :, :] = 0
         return hidden_state.detach(), cell_state.detach()
-
+"""
 #################################
 #학습 모듈
 #################################
@@ -145,7 +156,8 @@ def select_action(state):
             # t.max (1)은 각 행의 가장 큰 열 값을 반환합니다.
             # 최대 결과의 두번째 열은 최대 요소의 주소값이므로,
             # 기대 보상이 더 큰 행동을 선택할 수 있습니다.
-            return policy_net(state).max(1)[1].view(1, 1)
+            print("걸림3")
+            return policy_net(state)#.max(1)[1].view(1, 1)
     else:
         print('랜덤')
         #random하고 비중의 합이 1이 되게끔 하는 input이 필요 -> 포트폴리오 비중.
