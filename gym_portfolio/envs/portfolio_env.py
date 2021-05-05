@@ -9,7 +9,7 @@ import pandas as pd
 #환경 구성
 def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 반환
   reward=0
-  print("action",action)
+  print("portfolio_env.py get_reward 함수에서 action : ",action)
   for i in range(3):
     reward+=((action[i]*wealth*(end_value[i]-start_value[i]))/start_value[i])
   #DGS30 채권수익률은 다르게 계산됨.
@@ -63,9 +63,9 @@ class PortfolioEnv(gym.Env):
       done = self.stepcount >= 4
       reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
       self.portfolio_proportion=action
-      print(self.portfolio_proportion)
+      print("portfolio_env 클래스에서 step 함수에서 비중 :",self.portfolio_proportion)
       self.wealth += reward
-      print(self.wealth)
+      print("portfolio_env 클래스에서 step 함수에서 현재자산가치 :", self.wealth)
       return self.get_observation(), reward, done
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.

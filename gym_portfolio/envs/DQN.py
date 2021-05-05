@@ -62,17 +62,7 @@ class ReplayMemory(object):
         return len(self.memory)
 
 #https://github.com/AndersonJo/dqn-pytorch/blob/master/dqn.py dqn 참고
-class DQN(nn.Module):
-    def __init__(self, n_action):
-        super(DQN, self).__init__()
-        self.n_action = n_action
-        self.linear_1=nn.Linear(self.n_action,4)
-        self.linear_2=nn.Linear(4,4)
-    def forward(self, input_tensor):
-        linear1=F.relu(self.linear_1(input_tensor))
-        output=F.sigmoid(self.linear_2(linear1))
-        return output
-"""
+
 class DQN(nn.Module):
     def __init__(self, n_action):
         super(DQN, self).__init__()
@@ -118,11 +108,10 @@ class DQN(nn.Module):
         hidden_state[:, :, :] = 0
         cell_state[:, :, :] = 0
         return hidden_state.detach(), cell_state.detach()
-"""
+
 #################################
 #학습 모듈
 #################################
-#다음주 할 일 : 중간보고서 발표, DQN 연결해보기
 
 BATCH_SIZE = 128
 GAMMA = 0.999
@@ -134,8 +123,7 @@ TARGET_UPDATE = 10
 
 # gym 행동 공간에서 행동의 숫자를 얻습니다.
 n_actions = env.action_space.shape[0] #이거 대신 action 수인 4를 넣어야 하나..?
-
-policy_net = DQN(n_actions).to(device)
+policy_net = DQN(n_actions).to(device) #DQN이 n_actions에 들어가는게 아니고 state를 tensor형태로 맞춘 뒤 학습시켜서 그 결과가 액션이 되어야함
 target_net = DQN(n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
@@ -262,6 +250,7 @@ for i_episode in range(num_episodes):
         # 행동 선택과 수행
         action = select_action(state)
         new_observation, reward, done = env.step(action)
+
       #  _, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], device=device)
 
