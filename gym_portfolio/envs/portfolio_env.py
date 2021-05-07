@@ -3,6 +3,10 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
 #https://engineering-ladder.tistory.com/61 구조에 대한 한국어 설명
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
 
@@ -50,12 +54,17 @@ class PortfolioEnv(gym.Env):
       self.np_random, seed = seeding.np_random(seed)
       return [seed]
     def get_observation(self):
-        observation = (
+        a=np.array(self.portfolio_proportion)
+        b=np.array([self.wealth,0,0,0])
+        c=np.array(self.data.iloc[self.idx:self.idx + 61])
+       # d=np.array(self.indicators.iloc[self.idx + 60])
+        observation=torch.from_numpy(np.vstack((a,b,c)))
+        """observation = (
             self.portfolio_proportion,
             self.wealth,
             self.data.iloc[self.idx:self.idx + 61].values,  # [self.idx:self.idx+30]도 가능 이부분 인덱스 잘 맞춰줘야
             self.indicators.iloc[self.idx + 60].values  # 마지막 시점에서 요약된 indicator들을 보여줌.
-        )
+        )"""
         return observation
     def step(self, action):#step 함수를 이용해 에이전트가 환경에 대한 행동 취하고, 이후 획득한 환경에 대한 정보 리턴
       self.idx += 60
