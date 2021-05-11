@@ -1,4 +1,4 @@
-# 강화학습을 통한 안정적 포트폴리오 설계 (Capstone design 2021-1)
+# 강화학습을 통한 포트폴리오 설계 (Capstone design 2021-1)
 * 산업경영공학과 16학번 김수영
 
 ## Overview
