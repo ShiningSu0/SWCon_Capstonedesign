@@ -26,7 +26,8 @@ import matplotlib.pyplot as plt
 from gym.envs.registration import register
 import random as pr
 
-
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 env = gym.make('Portfolio-v0').unwrapped
 #observation = env.reset()
 env.reset()
@@ -146,8 +147,8 @@ def select_action(state):
             # 최대 결과의 두번째 열은 최대 요소의 주소값이므로,
             # 기대 보상이 더 큰 행동을 선택할 수 있습니다.
             print("DQN에 걸림")
-            print(policy_net(state))
-            return policy_net(state)#.max(1)[1].view(1, 1)
+            print(policy_net(state)[0])
+            return policy_net(state)[0]#.max(1)[1].view(1, 1)
     else:
         print('랜덤')
         #random하고 비중의 합이 1이 되게끔 하는 input이 필요 -> 포트폴리오 비중.
@@ -239,7 +240,7 @@ while not done:
         print('end')
 """
 
-num_episodes = 50
+num_episodes = 50000
 for i_episode in range(num_episodes):
     # 환경과 상태 초기화
     env.reset()
