@@ -114,7 +114,9 @@ def train(q, q_target, memory, optimizer):
 def main():
     env = gym.make('Portfolio-v0').unwrapped
     q = Qnet()
+   #q=q.to('cuda:0')
     q_target = Qnet()
+   # q_target=q_target.to('cuda:0')
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer()
     forplot=[]
@@ -122,7 +124,7 @@ def main():
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate) # Q-net만 업데이트함 큐타겟은 그냥 복사해오니까
 
-    for n_epi in range(100000):
+    for n_epi in range(1000):
         epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
         #10000개 에피소드. 8% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
         #액션은 q. sample action
