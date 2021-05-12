@@ -2,9 +2,6 @@ import gym
 import numpy as np
 from gym_portfolio.envs.portfolio_env import PortfolioEnv
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib import interactive
 import math
 import random
 import numpy as np
@@ -13,7 +10,6 @@ import matplotlib.pyplot as plt
 from collections import namedtuple
 from itertools import count
 from PIL import Image
-
 from torch.autograd import Variable
 import torch
 import torch.nn as nn

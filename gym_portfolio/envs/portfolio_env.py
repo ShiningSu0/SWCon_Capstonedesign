@@ -18,27 +18,27 @@ def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 �
   if action==0:
       action_array=[1,0,0,0]
   elif action==1:
-      action_array=[0,1,0,0]
+      action_array=[0.8,0.2,0,0]
   elif action==2:
-      action_array=[0,0,1,0]
+      action_array=[0.6,0.2,0.2,0]
   elif action==3:
-      action_array=[0,0,0,1]
+      action_array=[0.4,0.2,0.2,0.2]
   elif action==4:
-      action_array=[0.5,0.5,0,0]
+      action_array=[0.25,0.25,0.25,0.25]
   elif action==5:
-      action_array=[1,0,0,0]
+      action_array=[0.2,0.4,0.2,0.2]
   elif action==6:
-      action_array=[1,0,0,0]
+      action_array=[0,0.5,0.5,0]
   elif action==7:
-      action_array=[1,0,0,0]
+      action_array=[0,0.2,0.4,0.4]
   elif action==8:
-      action_array=[1,0,0,0]
+      action_array=[0,0,0.5,0.5]
   elif action==9:
-      action_array=[1,0,0,0]
+      action_array=[0,0.2,0.2,0.6]
   elif action==10:
-      action_array=[1,0,0,0]
+      action_array=[0,0,0.2,0.8]
   elif action==11:
-      action_array=[1,0,0,0]
+      action_array=[0,0,0,1]
 
   #print("portfolio_env 클래스에서 step 함수에서 비중 :",action_array)
   for i in range(3):

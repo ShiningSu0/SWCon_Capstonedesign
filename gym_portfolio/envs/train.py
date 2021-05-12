@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import interactive
 import math
 import random
+import seaborn as sns
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -32,14 +33,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+import seaborn as sns
+import matplotlib.pyplot as plt
 # Hyperparameters
+import torch
+
+USE_CUDA = torch.cuda.is_available()
+print(USE_CUDA)
+
+device = torch.device('cuda:0' if USE_CUDA else 'cpu')
+print('학습을 진행하는 기기:',device)
 learning_rate = 0.0005
 gamma = 0.98
 buffer_limit = 50000
 batch_size = 32
 
-
+plt.ion()
 class ReplayBuffer():
     def __init__(self):
         self.buffer = collections.deque(maxlen=buffer_limit)
@@ -116,12 +125,12 @@ def main():
     q_target = Qnet()
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer()
-
+    forplot=[]
     print_interval = 20
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate) # Q-net만 업데이트함 큐타겟은 그냥 복사해오니까
 
-    for n_epi in range(10000):
+    for n_epi in range(100000):
         epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
         #10000개 에피소드. 8% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
         #액션은 q. sample action
@@ -141,12 +150,14 @@ def main():
 
         if memory.size() > 2000: #메모리 2000 전에는 쌓기만 해라.. 랜덤히 움직임 거의
             train(q, q_target, memory, optimizer)
-
         if n_epi % print_interval == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
+            forplot.append(score/print_interval)
             print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
                 n_epi, score / print_interval, memory.size(), epsilon * 100))
             score = 0.0
+
+    print("l = ",forplot)
     env.close()
 
 
