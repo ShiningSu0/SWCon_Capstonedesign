@@ -77,7 +77,7 @@ class PortfolioEnv(gym.Env):
       self.idx += 60
       self.stepcount += 1
       self.done = (self.stepcount >= 4)
-      #print(self.idx)
+     # print("시도 : ", self.stepcount, "현재 액션 : ",action)
       reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
       self.portfolio_proportion=0
       self.wealth += reward
@@ -94,5 +94,3 @@ class PortfolioEnv(gym.Env):
       #print(self.idx)
       return np.array([self.wealth,self.indicators.iloc[self.idx + 60][0],self.indicators.iloc[self.idx + 60][1],self.indicators.iloc[self.idx + 60][2]],dtype=np.float32)#self._get_obs()
 
-    def render(self, mode='human'):
-      print("Current wealth: ", self.wealth)
