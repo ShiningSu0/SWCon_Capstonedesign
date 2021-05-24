@@ -15,30 +15,17 @@ def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 �
   reward=0
   action_array=[]
   #print("portfolio_env.py get_reward 함수에서 action : ",action)
-  if action==0:
-      action_array=[1,0,0,0]
-  elif action==1:
-      action_array=[0.8,0.2,0,0]
-  elif action==2:
-      action_array=[0.6,0.2,0.2,0]
-  elif action==3:
-      action_array=[0.4,0.2,0.2,0.2]
-  elif action==4:
-      action_array=[0.25,0.25,0.25,0.25]
-  elif action==5:
-      action_array=[0.2,0.4,0.2,0.2]
-  elif action==6:
-      action_array=[0,0.5,0.5,0]
-  elif action==7:
-      action_array=[0,0.2,0.4,0.4]
-  elif action==8:
-      action_array=[0,0,0.5,0.5]
-  elif action==9:
-      action_array=[0,0.2,0.2,0.6]
-  elif action==10:
-      action_array=[0,0,0.2,0.8]
-  elif action==11:
-      action_array=[0,0,0,1]
+  action_array_list=[]
+  for i in range(3):
+      for j in range(3):
+          for k in range(3):
+              for l in range(3):
+                  if i==0 and j==0 and k==0 and l==0:
+                      continue
+                  else:
+                      total_sum=(i+j+k+l)
+                      action_array_list.append([i/total_sum,j/total_sum,k/total_sum,l/total_sum])
+  action_array=action_array_list[action]
 
   #print("portfolio_env 클래스에서 step 함수에서 비중 :",action_array)
   for i in range(3):

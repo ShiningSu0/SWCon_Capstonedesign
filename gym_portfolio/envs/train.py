@@ -73,19 +73,21 @@ class Qnet(nn.Module):
         super(Qnet, self).__init__()
         self.fc1 = nn.Linear(4, 128)
         self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 12)
+        self.fc3 = nn.Linear(128, 128)
+        self.fc4 = nn.Linear(128,80)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
         return x
 
     def sample_action(self, obs, epsilon):
         out = self.forward(obs)
         coin = random.random()
         if coin < epsilon:
-            return random.randint(0, 11)
+            return random.randint(0, 79)
         else:
             return out.argmax().item()
 
@@ -120,14 +122,14 @@ def main():
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer()
     forplot=[]
-    barplot=[0]*12
+    barplot=[0]*81
     print_interval = 20
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate) # Q-net만 업데이트함 큐타겟은 그냥 복사해오니까
 
-    for n_epi in range(100000):
-        epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
-        #10000개 에피소드. 8% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
+    for n_epi in range(10000):
+        epsilon = max(0.05, 0.20 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
+        #10000개 에피소드. 20% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
         #액션은 q. sample action
         s = env.reset()
         done = False
