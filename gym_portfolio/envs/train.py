@@ -123,11 +123,12 @@ def main():
     memory = ReplayBuffer()
     forplot=[]
     barplot=[0]*81
+    trend_check=[[0]*81,[0]*81]
     print_interval = 20
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate) # Q-net만 업데이트함 큐타겟은 그냥 복사해오니까
 
-    for n_epi in range(300000):
+    for n_epi in range(3000):
         epsilon = max(0.05, 0.20 - 0.01 * (n_epi / 2000))  # Linear annealing from 8% to 1%
         #10000개 에피소드. 20% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
         #액션은 q. sample action
@@ -137,7 +138,11 @@ def main():
         while not done:
             a = q.sample_action(torch.from_numpy(s).float(), epsilon)
             barplot[a]+=1
-            s_prime, r, done, info = env.step(a) #iloc 10000 넘어갈때 에러 발생 4번마다 리셋해주는 함수 필요함
+            s_prime, r, done, trend = env.step(a) #iloc 10000 넘어갈때 에러 발생 4번마다 리셋해주는 함수 필요함
+            if trend>0:
+                trend_check[0][a]+=1
+            else:
+                trend_check[1][a]+=1
             done_mask = 0.0 if done else 1.0 # 게임이 끝나는 스텝이면 0 아님 1
             memory.put((s, a, r / 100.0, s_prime, done_mask))
             s = s_prime
@@ -150,12 +155,13 @@ def main():
             train(q, q_target, memory, optimizer)
         if n_epi % print_interval == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
-            if n_epi % (1000*print_interval) == 0:
+            if n_epi % (100*print_interval) == 0:
                 forplot.append(score/print_interval)
             print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
                 n_epi, score / print_interval, memory.size(), epsilon * 100))
             score = 0.0
-
+    print("trend_bull = ", trend_check[0])
+    print("trend_bear = ", trend_check[1])
     print("l = ",forplot)
     print("barplot = ",barplot)
     env.close()
