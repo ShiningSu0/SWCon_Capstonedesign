@@ -69,7 +69,7 @@ class PortfolioEnv(gym.Env):
       self.portfolio_proportion=0
       self.wealth += reward
    #   print("portfolio_env 클래스에서 step 함수에서 현재자산가치 :", self.wealth)
-      trend=self.data.iloc[self.idx+120][0]-self.data.iloc[self.idx+60][0]
+      trend=self.data.iloc[self.idx+120][1]-self.data.iloc[self.idx+60][1]
       return np.array([self.wealth,self.indicators.iloc[self.idx + 120][0],self.indicators.iloc[self.idx + 120][1],self.indicators.iloc[self.idx + 120][2]],dtype=np.float32), reward,self.done,trend#self.get_observation(), reward,self.done
 
     def reset(self):# Step을 실행하다가 epsiode가 끝나서 이를 초기화해서 재시작해야할 때, 초기 State를 반환한다.
