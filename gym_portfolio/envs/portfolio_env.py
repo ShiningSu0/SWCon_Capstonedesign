@@ -9,30 +9,65 @@ import torch.optim as optim
 import torch.nn.functional as F
 #https://engineering-ladder.tistory.com/61 구조에 대한 한국어 설명
 #https://github.com/hackthemarket/gym-trading/tree/master/gym_trading/envs 참고
-
+# 나스닥, 금, 채권, 애플
 #환경 구성
-def get_reward(action,wealth,start_value,end_value):#수익을 보상으로써 반환
-  reward=0
-  action_array=[]
-  #print("portfolio_env.py get_reward 함수에서 action : ",action)
-  action_array_list=[]
-  for i in range(3):
-      for j in range(3):
-          for k in range(3):
-              for l in range(3):
-                  if i==0 and j==0 and k==0 and l==0:
-                      continue
-                  else:
-                      total_sum=(i+j+k+l)
-                      action_array_list.append([i/total_sum,j/total_sum,k/total_sum,l/total_sum])
-  action_array=action_array_list[action]
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-  #print("portfolio_env 클래스에서 step 함수에서 비중 :",action_array)
-  for i in range(3):
-    reward+=((action_array[i]*wealth*(end_value[i]-start_value[i]))/start_value[i])
-  #DGS30 채권수익률은 다르게 계산됨.
-  reward+=action_array[3]*wealth*((1+0.01*(start_value[3])/4)-1)
-  return reward
+action_array_list = []
+for i in range(3):
+    for j in range(3):
+        for k in range(3):
+            for l in range(3):
+                if i == 0 and j == 0 and k == 0 and l == 0:
+                    continue
+                else:
+                    total_sum = (i + j + k + l)
+                    action_array_list.append([i / total_sum, j / total_sum, k / total_sum, l / total_sum])
+
+
+def get_reward(action,array):#수익을 보상으로써 반환, start_value와 end_value는 각각
+    mkt_money_changes_t=100
+    money=100
+    reward=0
+    action_array=action_array_list[action]
+    return_array=[]
+    mkt_return=[] #시장 수익률
+    pf_return=[] #포트폴리오의 일별 수익률
+    mkt_money_changes=[]#시장(나스닥)의 일별 수익에 따른 금액 변화 (초기 : 100)
+    pf_money_changes=[] #포트폴리오의 일별 수익에 따른 금액 변화 (초기 : 100)
+    r_f=array.iloc[60].values[2] #채권수익률 risk_free
+    for i in range(0,60,5):#0,60,5인 이유 : cov, var로 베타 계산할 때 data point가 일주일마다 수익률 변화임..
+        temp_return=[]
+        for j in range(4):
+            if j==2:
+                temp_return.append((-1)*100 * (array.iloc[i + 5].values[j] - array.iloc[i].values[j]) / array.iloc[i].values[j]) #채권수익률은 반대로 계산
+            else:
+                temp_return.append(100*(array.iloc[i+5].values[j]-array.iloc[i].values[j])/array.iloc[i].values[j])
+        return_array.append(temp_return)
+
+    for i in range(12):#60거래일간의 데이터를 5거래일마다 끊어서 수익률 관찰하므로 12번 반복.
+        temp=0
+        for j in range(4):
+            temp+=action_array[j]*return_array[i][j]
+        pf_return.append(temp)
+        money=money*((100+temp)/100)
+        pf_money_changes.append(money)
+        mkt_money_changes_t=mkt_money_changes_t*((100+return_array[i][0])/100)
+        mkt_return.append(return_array[i][0])
+        mkt_money_changes.append(mkt_money_changes_t)
+
+    beta_pf=np.cov(pf_return,mkt_return)[0, 1]/np.var(mkt_return) #포트폴리오의 베타 계산
+    reward=(pf_money_changes[-1]-100)-(r_f+beta_pf*(mkt_money_changes[-1]-100-r_f)) #reward : 수익률 - CAPM에 따른 기대 수익률 -> market excess return?
+
+
+
+
+    return reward
+
+
+
+
 
 class PortfolioEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -65,7 +100,7 @@ class PortfolioEnv(gym.Env):
       self.stepcount += 1
       self.done = (self.stepcount >= 4)
      # print("시도 : ", self.stepcount, "현재 액션 : ",action)
-      reward = get_reward(action,self.wealth,self.data.iloc[self.idx+60].values,self.data.iloc[self.idx+120].values)
+      reward = get_reward(action,self.data.iloc[self.idx:self.idx+61])
       self.portfolio_proportion=0
       self.wealth += reward
    #   print("portfolio_env 클래스에서 step 함수에서 현재자산가치 :", self.wealth)
@@ -77,7 +112,5 @@ class PortfolioEnv(gym.Env):
       self.stepcount=0
       self.done=0
       self.idx= np.random.randint(low=0, high=len(self.data.index) -360)
-      #print(self.indicators.iloc[self.idx + 60][0])
-      #print(self.idx)
-      return np.array([self.wealth,self.indicators.iloc[self.idx + 60][0],self.indicators.iloc[self.idx + 60][1],self.indicators.iloc[self.idx + 60][2]],dtype=np.float32)#self._get_obs()
 
+      return np.array([self.wealth,self.indicators.iloc[self.idx + 60][0],self.indicators.iloc[self.idx + 60][1],self.indicators.iloc[self.idx + 60][2]],dtype=np.float32)#self._get_obs()
