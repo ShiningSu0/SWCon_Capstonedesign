@@ -128,7 +128,7 @@ def main():
     score = 0.0
     optimizer = optim.Adam(q.parameters(), lr=learning_rate) # Q-net만 업데이트함 큐타겟은 그냥 복사해오니까
 
-    for n_epi in range(500000):
+    for n_epi in range(100000):
         epsilon = max(0.05 , 0.20 - 0.01 * (n_epi / 2000))  # Linear annealing from 8% to 1%
         #10000개 에피소드. 20% 시작해서 1%까지 줄어듦 입실론이 즉 익스플로러 덜하도록
         #액션은 q. sample action
